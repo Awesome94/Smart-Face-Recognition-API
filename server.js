@@ -1,6 +1,18 @@
 const express = require('express');
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const knex = require('knex');
+
+const db  = knex({
+  client: 'pg',
+  connection: {
+    host: '127.0.0.1',
+    user: 'AWESOME',
+    database: 'smartfacedb'
+  }
+});
+
+db.select('*').from('users');
 
 const app = express();
 
@@ -43,44 +55,42 @@ app.post('/sigin', (req, res) =>{
 
 app.post('/register', (req,res)=>{
   const{name, email, password} = req.body;
-  database.users.push({
-    id: 12345,
-    name: name,
+  db('users')
+  .returning('*')
+  .insert({
     email: email,
-    entries: 0,
-    password: password,
+    name: name,
     joined: new Date()
-  });
-  res.status(201).json(database.users[database.users.length-1])
+  }).then(user => {
+    res.json(user[0]);
+  })
+  .catch(err => res.status(400).json('unable to register'))
 });
 
 app.get('/profile/:id', (req, res)=>{
   const {id } = req.params;
-  let found = false;
-  database.users.forEach(user => {
-    if(user.id === id){
-      found = true;
-      return res.json(user);
+  db.select('*').from('users').where({id})
+  .then(user => {
+    if (user.length){
+      res.json(user)
+    } else {
+      res.status(404).json(`user ${id} not found`)
     }
-  })
-  if (!found){
-    res.status(400).json('not found')
-  }
-})
+    })
+      .catch(err => res.status(400).json(`error getting user  ${id}`))
+});
 
 app.put('/image', (req, res) => {
 const { id } = req.body;
 let found = false;
-database.users.forEach(user => {
-  if(user.id === id){
-    found = true;
-    user.entries++
-    return res.json(user.entries);
-  }
-  if(!found){
-    res.status(404).json("User not found")
-  }
+db('users')
+.where('id', '=', id)
+.increment('entries', 1)
+.returning('entries')
+.then(entries => {
+  res.json(entries[0]);
 })
+.catch( err => res.status(400).json('Failed to get entries'))
 })
 
 app.listen(process.env.port  || 3000, function () {
