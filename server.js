@@ -17,28 +17,7 @@ db.select('*').from('users');
 const app = express();
 
 app.use(bodyParser.json());
-app.use(cors())
-
-const database = {
-  users: [
-    {
-      id: '123',
-      name: 'john',
-      email: 'jo@n.com',
-      password: 'cookies',
-      entries: 0,
-      joined: new Date()
-    },
-    {
-      id: '1234',
-      name: 'sally',
-      email: 's@lly.com',
-      password: 'bananas',
-      entries: 0,
-      joined: new Date()
-    }
-  ]
-}
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send(database.users);
