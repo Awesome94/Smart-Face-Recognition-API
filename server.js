@@ -20,7 +20,15 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', (req, res) => {
-  res.send(database.users);
+  db.select('*').from('users')
+    .then(user => {
+      if (user.length) {
+        res.json(user)
+      } else {
+        res.status(404).json(`user not found`)
+      }
+    })
+    .catch(err => res.status(400).json(`error getting user`))
 })
 
 app.post('/signin', (req, res) => {
